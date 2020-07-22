@@ -8,5 +8,6 @@ class Configuration : Data("config/config.json", killIfGenerated = true) {
     val tutoringChannelId: String = ""
     val hireMeChannelId: String = ""
     val openSourceContributionsChannelId: String = ""
+    val codeChallengeChannelId: String = ""
     val logChannelId: String = ""
 }

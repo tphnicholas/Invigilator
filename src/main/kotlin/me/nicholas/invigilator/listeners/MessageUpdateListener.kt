@@ -1,6 +1,7 @@
 package me.nicholas.invigilator.listeners
 
 import com.google.common.eventbus.Subscribe
+import kotlinx.coroutines.*
 import net.dv8tion.jda.api.events.message.MessageUpdateEvent
 import me.jakejmattson.kutils.api.Discord
 
@@ -16,6 +17,9 @@ class MessageUpdateListener(private val discord: Discord) {
 
         licenseFormatService.getTemplateFor(channel) ?: return
 
-        licenseFormatService.validateLayout(message, userAction = "Message Edit")
+        GlobalScope.launch {
+            licenseFormatService.validateLayout(message, userAction = "Message Edit")
+
+        }
     }
 }

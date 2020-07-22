@@ -1,6 +1,7 @@
 package me.nicholas.invigilator.listeners
 
 import com.google.common.eventbus.Subscribe
+import kotlinx.coroutines.*
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
 import me.jakejmattson.kutils.api.Discord
 
@@ -16,8 +17,10 @@ class MessageReceivedListener(private val discord: Discord) {
 
         licenseFormatService.getTemplateFor(channel) ?: return
 
-        if (!licenseFormatService.validateLayout(message, userAction = "Message Create")) {
-            message.delete().queue()
+        GlobalScope.launch {
+            if (!licenseFormatService.validateLayout(message, userAction = "Message Create")) {
+                message.delete().queue()
+            }
         }
     }
 }

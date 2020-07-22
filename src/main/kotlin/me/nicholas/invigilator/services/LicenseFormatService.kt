@@ -70,13 +70,22 @@ class LicenseFormatService(
                             bold("Issue:") to ErasableOpenSourceIssueArg,
                             bold("Language(s)/Framework(s):") to EveryArg,
                             bold("Description:") to EveryArg,
-                            bold("License:") to EveryArg // maybe create OpenSourceLicenseArg
+                            bold("License:") to EveryArg
                     ),
                     arrayOf(
                             bold("Pull Request:") to ErasableOpenSourcePullRequestArg,
                             bold("Language/Framework:") to EveryArg,
                             bold("Description:") to EveryArg,
                             bold("License:") to EveryArg
+                    )
+            ),
+            configuration.codeChallengeChannelId to arrayOf<ListingTemplate>(
+                    arrayOf(
+                            bold("Challenge:") to EveryArg,
+                            bold("Type:") to CodeChallengeTypeArg,
+                            bold("Language:") to EveryArg,
+                            bold("Length of solution:") to IntegerArg,
+                            bold("Link to solution:") to UrlArg
                     )
             )
     )
