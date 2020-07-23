@@ -3,6 +3,7 @@ package me.nicholas.invigilator.listeners
 import com.google.common.eventbus.Subscribe
 import kotlinx.coroutines.*
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent
+import net.dv8tion.jda.api.exceptions.InsufficientPermissionException
 import me.jakejmattson.kutils.api.Discord
 
 import me.nicholas.invigilator.services.LicenseFormatService
@@ -19,7 +20,11 @@ class MessageReceivedListener(private val discord: Discord) {
 
         GlobalScope.launch {
             if (!licenseFormatService.validateLayout(message, userAction = "Message Create")) {
-                message.delete().queue()
+                try {
+                    message.delete().queue()
+                } catch (e: InsufficientPermissionException) {
+                    println(e.localizedMessage)
+                }
             }
         }
     }

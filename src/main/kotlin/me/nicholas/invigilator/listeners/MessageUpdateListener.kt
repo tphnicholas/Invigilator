@@ -19,7 +19,6 @@ class MessageUpdateListener(private val discord: Discord) {
 
         GlobalScope.launch {
             licenseFormatService.validateLayout(message, userAction = "Message Edit")
-
         }
     }
 }

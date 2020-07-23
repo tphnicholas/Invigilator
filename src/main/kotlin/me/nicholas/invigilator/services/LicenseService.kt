@@ -2,20 +2,22 @@ package me.nicholas.invigilator.services
 
 import org.json.JSONObject
 import com.github.kittinunf.fuel.httpGet
-import com.github.kittinunf.fuel.json.responseJson
 import me.jakejmattson.kutils.api.annotations.Service
+
+import me.nicholas.invigilator.extensions.*
 
 @Service
 class LicenseService {
-    private val openSourceLicenses: List<String>
+    private var openSourceLicenses: List<String> = emptyList()
 
     init {
-        val (_, response, result) = "https://api.opensource.org/licenses"
+        "https://api.opensource.org/licenses"
                 .httpGet()
                 .header("Content-Type", "application/json")
-                .responseJson()
-
-        openSourceLicenses = result.component1()!!.array().map { (it as JSONObject).getString("id") }
+                .makeRequest()
+                .readJsonOrThrow {
+                    openSourceLicenses = it.array().map { (it as JSONObject).getString("id") }
+                }
     }
 
     fun isOpenSourceLicense(arg: String?) = openSourceLicenses.any { it.equals(arg, ignoreCase = true) }

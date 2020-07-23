@@ -1,9 +1,6 @@
 package me.nicholas.invigilator.util
 
-import com.github.kittinunf.fuel.httpPost
 import kotlin.math.*
-
-import me.nicholas.invigilator.extensions.makeRequest
 
 fun bold(obj: Any) = "**$obj**"
 fun nonEmbedded(obj: Any) = "<$obj>"
@@ -38,16 +35,21 @@ fun levenshteinPercentage(lhs : CharSequence, rhs : CharSequence): Double {
     return (1 - cost[lhsLength - 1] / max(lhsLength, rhsLength).toDouble())
 }
 
-fun uploadToHastebin(message: String): String {
-    val baseUrl = "https://hasteb.in"
+fun String.chunkedRetainingFullLines(maxCharactersEach: Int): List<String> {
+    val chunks = mutableListOf<String>()
+    var stringRemaining = this
 
-    val hastebinJsonResponse = "$baseUrl/documents"
-            .httpPost()
-            .header("Content-Type", "text/plain")
-            .body(message)
-            .makeRequest()!!
+    while (stringRemaining.isNotEmpty()) {
+        val wholeChunk = stringRemaining.take(maxCharactersEach)
+        val firstChunk = if (wholeChunk.length < stringRemaining.length) {
+            wholeChunk.substringBeforeLast('\n')
+        } else {
+            wholeChunk
+        }
 
-    val key = hastebinJsonResponse.obj().getString("key")
+        chunks.add(firstChunk)
+        stringRemaining = stringRemaining.drop(firstChunk.length).trim('\n')
+    }
 
-    return nonEmbedded("$baseUrl/$key")
+    return chunks
 }

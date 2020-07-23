@@ -2,11 +2,20 @@ package me.nicholas.invigilator.extensions
 
 import com.github.kittinunf.fuel.core.*
 import com.github.kittinunf.fuel.json.*
+import com.github.kittinunf.result.*
 
-fun Request.makeRequest(): FuelJson? {
-    val (_, response, result) = responseJson()
+typealias JsonResponse = Result<FuelJson, FuelError>
 
-    if (!response.isSuccessful) { return null }
+fun Request.makeRequest(): JsonResponse = responseJson().third
 
-    return result.component1()
+fun JsonResponse.getJsonData() = when(this) {
+    is Result.Failure -> null
+    is Result.Success -> this.value
+}
+
+inline fun JsonResponse.readJson(crossinline block: (FuelJson) -> Unit) = this.map { block(it) }
+
+inline fun JsonResponse.readJsonOrThrow(block: (FuelJson) -> Unit) = when(this) {
+    is Result.Failure -> error(this.error.localizedMessage)
+    is Result.Success -> block(this.value)
 }

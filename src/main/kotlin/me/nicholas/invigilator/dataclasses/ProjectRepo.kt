@@ -6,8 +6,8 @@ import org.json.JSONObject
 import com.github.kittinunf.fuel.*
 import com.github.kittinunf.fuel.core.isSuccessful
 
-import me.nicholas.invigilator.extensions.makeRequest
 import me.nicholas.invigilator.util.nonEmbedded
+import me.nicholas.invigilator.extensions.*
 
 abstract class ProjectRepo(val url: URI, val owner: String, val repo: String) {
     abstract val baseApiUrl: String
@@ -52,25 +52,23 @@ class GithubRepo(url: URI, owner: String, repo: String) : ProjectRepo(url, owner
     override val baseApiUrl: String = "https://api.github.com"
 
     init {
-        val result = "$baseApiUrl/repos/$owner/$repo"
+        "$baseApiUrl/repos/$owner/$repo"
                 .httpGet()
                 .header("Accept", "application/vnd.github.v3+json")
                 .makeRequest()
-
-
-        result?.let {
-            isValidAndVisible = true
-            asJson = it.obj()
-            license = asJson.getJSONObject("license").getString("key")
-            id = asJson.getInt("id")
+                .readJson {
+                    isValidAndVisible = true
+                    asJson = it.obj()
+                    license = asJson.getJSONObject("license").getString("key")
+                    id = asJson.getInt("id")
+                }
         }
-    }
 
     private fun getIssue(issueNumber: Int)
             = "$baseApiUrl/repos/$owner/$repo/issues/$issueNumber"
             .httpGet()
             .makeRequest()
-            ?.obj()
+            .getJsonData()
 
     override fun isIssueUrl(uri: URI): Boolean {
         val issueUrlRegex = Regex("/$owner/$repo/issues/(\\d+)/?")
@@ -80,9 +78,10 @@ class GithubRepo(url: URI, owner: String, repo: String) : ProjectRepo(url, owner
 
         val (issueNumber) = match.destructured
 
-        val issue = getIssue(issueNumber.toInt())
+        val issue = getIssue(issueNumber.toInt())?.obj()
+                ?: return false
 
-        return ((issue != null) && !issue.has("pull_request"))
+        return (!issue.has("pull_request"))
     }
 
     override fun isPullRequestUrl(uri: URI): Boolean {
@@ -93,9 +92,10 @@ class GithubRepo(url: URI, owner: String, repo: String) : ProjectRepo(url, owner
 
         val (pullRequestNumber) = match.destructured
 
-        val issue = getIssue(pullRequestNumber.toInt())
+        val issue = getIssue(pullRequestNumber.toInt())?.obj()
+                ?: return false
 
-        return ((issue != null) && issue.has("pull_request"))
+        return (issue.has("pull_request"))
     }
 }
 
@@ -103,21 +103,20 @@ class GitlabRepo(url: URI, owner: String, repo: String) : ProjectRepo(url, owner
     override val baseApiUrl: String = "https://gitlab.com/api/v4"
 
     init {
-        val result = "$baseApiUrl/projects/${URLEncoder.encode("$owner/$repo", "UTF-8")}?license=1"
+        "$baseApiUrl/projects/${URLEncoder.encode("$owner/$repo", "UTF-8")}?license=1"
                 .httpGet()
                 .header("Content-Type", "application/json")
                 .makeRequest()
-
-        result?.let {
-            isValidAndVisible = true
-            asJson = it.obj()
-            asJson.get("license")?.let {
-                if (!it.equals(JSONObject.NULL)) {
-                    license = (it as JSONObject).getString("key")
+                .readJson {
+                    isValidAndVisible = true
+                    asJson = it.obj()
+                    asJson.get("license")?.let {
+                        if (!it.equals(JSONObject.NULL)) {
+                            license = (it as JSONObject).getString("key")
+                        }
+                    }
+                    id = asJson.getInt("id")
                 }
-            }
-            id = asJson.getInt("id")
-        }
     }
 
     override fun isIssueUrl(uri: URI): Boolean {
